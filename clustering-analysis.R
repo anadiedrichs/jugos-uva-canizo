@@ -39,6 +39,11 @@ plot(fit,what = c("classification")) # plot results
 plot(fit,what = c("BIC"))
 summary(fit) # display the best model 
 
+mod2 <- MclustDA(data, dataset$Origen, modelType = "EDDA")
+summary(mod2) # analizar
+plot(mod2, what = "scatterplot")
+plot(mod2, what = "classification")
+cv <- cvMclustDA(mod2, nfold = 10)
 
 # K-Means Clustering with 3 clusters
 fit <- kmeans(data, 3)
@@ -68,4 +73,5 @@ library(fpc)
 plotcluster(data, fit.k2$cluster) 
 
 # comparamos los dos clusters
+# TODO: evaluar las metricas que alli presenta.
 cluster.stats(d, fit$cluster, fit.k2$cluster) 
