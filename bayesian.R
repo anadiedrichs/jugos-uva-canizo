@@ -1,4 +1,4 @@
-
+# status, no terminado, WIP
 
 library(readr)
 dataset <- read_csv("resultados_muestras.csv")
