@@ -1,5 +1,5 @@
 ---
-title: "01-exploratory-data-analysis"
+title: "Análisis exploratorio de los datos"
 author: "Ana Laura Diedrichs & Brenda Canizo"
 date: "May 22, 2019"
 output: html_document
@@ -15,6 +15,12 @@ dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
 ```
 
 ## Distribución de las variables
+
+### Intro al dataset
+
+```{r}
+t(introduce(dataset))
+```
 
 ### Boxplot
 
@@ -43,6 +49,12 @@ plot_correlation(dataset[-1])
 ```{r}
 # correr solo para ver reporte, abre pestaña en navegador
 #create_report(dataset)
+```
+
+## QQ plot
+
+```{r}
+plot_qq(dataset)
 ```
 
 ## Pairs plot
