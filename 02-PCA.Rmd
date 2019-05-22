@@ -1,0 +1,82 @@
+---
+title: "PCA análisis"
+author: "Ana Laura Diedrichs & Brenda Canizo"
+date: "May 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PCA
+
+```{r}
+library(DataExplorer)
+suppressMessages(library(ggfortify))
+library(factoextra)
+```
+```{r}
+library(readxl)
+dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+```
+```{r}
+pca.model <- prcomp(dataset[-1],scale. = TRUE)
+#' Valores regresados por la funcion prcomp()
+names(pca.model)
+#' sdev : es la desviación estándar de los componenest principales
+#'  (las raíces cuadradas de los eigenvalues (valores propios))
+head(pca.model$sdev)
+#' rotación: la matriz de variables "loadings", columnas que son vectores propios (eigenvectors)
+head(unclass(pca.model$rotation)[, 1:4])
+#' en center y scale se guardan los valores de media y desviación que normalizaron los datos
+#' 
+print(pca.model$center)
+print(pca.model$scale)
+#' Para ver con detalle coordenadas, coseno cuadrado y contribuciones
+get_pca_ind(pca.model)
+#' Por ejemplo para acceder al cos2 de los individuos usar ´get_pca_ind(pca.model)$cos2´
+#' Eigenvalues y varianza
+summary(pca.model)
+```
+```{r}
+fviz_screeplot(pca.model, ncp=6)
+
+```
+```{r}
+
+fviz_pca_var(pca.model)
+
+
+```
+```{r}
+fviz_pca_var(pca.model, col.var = "contrib", 
+             gradient.cols = c("white", "blue", "red"),
+             ggtheme = theme_minimal())
+
+```
+```{r}
+fviz_pca_ind(pca.model, label="none", habillage=dataset$Origen,
+             addEllipses=TRUE, ellipse.level=0.95, palette = "Dark2")
+
+
+```
+```{r}
+autoplot(pca.model,data=dataset,colour = 'Origen')
+
+
+```
+```{r}
+#' ## Biplot de individuos y variables
+#' 
+fviz_pca_biplot(pca.model, label = "var", habillage=dataset$Origen,
+                addEllipses=TRUE, ellipse.level=0.85,
+                ggtheme = theme_minimal())
+
+```
+
+```{r}
+
+plot_prcomp(dataset[-1])
+```
+
