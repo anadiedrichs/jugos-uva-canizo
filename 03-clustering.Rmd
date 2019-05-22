@@ -1,0 +1,41 @@
+---
+title: "Clustering"
+author: "Ana Laura Diedrichs"
+date: "May 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+data <- dataset[-1]
+```
+## Clustering intro
+
+### K-means
+
+```{r}
+set.seed(1257)
+kmodel.2 <- kmeans(data, centers=2)
+kmodel.2
+```
+
+
+```{r }
+k.1 <- dataset[kmodel.2$cluster==1,]
+k.2 <- dataset[kmodel.2$cluster==2,]
+```
+#### Cluster 1
+```{r }
+plot_histogram(k.1)
+```
+#### Cluster 2
+
+```{r }
+plot_histogram(k.2)
+```
+### Clustering jerárquico
