@@ -1,0 +1,61 @@
+---
+title: "01-exploratory-data-analysis"
+author: "Ana Laura Diedrichs & Brenda Canizo"
+date: "May 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+```
+
+## Distribución de las variables
+
+### Boxplot
+
+
+```{r }
+library(DataExplorer)
+plot_boxplot(dataset,by="Origen")
+
+```
+### Histograma
+
+```{r}
+plot_histogram(dataset)
+```
+
+### Densidad estimada
+
+```{r}
+plot_density(dataset)
+```
+## Correlaciones
+
+```{r }
+plot_correlation(dataset[-1])
+```
+```{r}
+# correr solo para ver reporte, abre pestaña en navegador
+#create_report(dataset)
+```
+
+## Pairs plot
+
+```{r , echo=FALSE}
+library(caret)
+featurePlot(x=dataset[,c(2,3,4,5,6)], y=as.factor(dataset$Origen),  "pairs", auto.key=list(columns=2))
+
+
+```
+```{r , echo=FALSE}
+
+featurePlot(x=dataset[,c(7,8,9,10,11)], y=as.factor(dataset$Origen),  "pairs", auto.key=list(columns=2))
+
+```
+
