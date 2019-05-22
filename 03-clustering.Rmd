@@ -12,22 +12,43 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readxl)
 dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+# preparacion de datos
 data <- dataset[-1]
+data <- scale(data)
 ```
 ## Clustering intro
 
 ### K-means
-
+```{r}
+# Determine number of clusters
+wss <- (nrow(data)-1)*sum(apply(data,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(data, 
+   centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+```
 ```{r}
 set.seed(1257)
-kmodel.2 <- kmeans(data, centers=2)
-kmodel.2
+# K-Means Cluster Analysis
+fit <- kmeans(data, 3) # 2 cluster solution
+# get cluster means 
+aggregate(data,by=list(fit$cluster),FUN=mean)
+# append cluster assignment
+mydata <- data.frame(data, fit$cluster)
+
+cbind(mydata$fit.cluster,dataset$Origen)
+```
+```{r}
+library(cluster) 
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, 
+   labels=2, lines=0)
 ```
 
 
+
 ```{r }
-k.1 <- dataset[kmodel.2$cluster==1,]
-k.2 <- dataset[kmodel.2$cluster==2,]
+k.1 <- dataset[fit$cluster==1,]
+k.2 <- dataset[fit$cluster==2,]
 ```
 #### Cluster 1
 ```{r }
@@ -39,3 +60,36 @@ plot_histogram(k.1)
 plot_histogram(k.2)
 ```
 ### Clustering jerárquico
+
+#### Ward Hierarchical Clustering
+```{r}
+# Ward Hierarchical Clustering
+d <- dist(data, method = "euclidean") # distance matrix
+fit <- hclust(d, method="ward")
+plot(fit) # display dendogram
+groups <- cutree(fit, k=3) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters
+rect.hclust(fit, k=3, border="red") 
+```
+#### Ward Hierarchical Clustering with Bootstrapped p values
+
+```{r}
+
+library(pvclust)
+fit <- pvclust(data, method.hclust="ward",
+               method.dist="euclidean")
+plot(fit) # dendogram with p values
+# add rectangles around groups highly supported by the data
+pvrect(fit, alpha=.95)
+```
+
+### Mas info en 
+https://uc-r.github.io/kmeans_clustering
+
+https://www.semanticscholar.org/paper/Clustering-Methods-and-Their-Uses-in-Computational-Downs-Barnard/d81cea597b15deebd940873ee12a4e44019e25af
+
+http://www.bioconductor.org/packages/release/bioc/vignettes/ChemmineR/inst/doc/ChemmineR.html
+
+http://crdd.osdd.net/clusters.php
+
+https://www.sciencedirect.com/topics/chemistry/molecular-cluster
