@@ -12,7 +12,20 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readxl)
 library(DataExplorer)
-dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+#dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+dataset <- read_excel("data/Dataset para enfoque 2 y 3.xlsx")
+```
+
+```{r}
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
+#maxs <- apply(dataset[-1], 2, max)
+#mins <- apply(dataset[-1], 2, min)
+#dataset <- data.frame(cbind(dataset$Origen, scale(dataset[-1], center = mins, scale = maxs) - mins))
+#colnames(dataset)[1] <- "Origen"
+
+dataset
 ```
 
 ## Distribución de las variables
