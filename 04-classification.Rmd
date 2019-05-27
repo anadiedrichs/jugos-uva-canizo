@@ -1,0 +1,75 @@
+---
+title: "clasificacion"
+author: "Ana Diedrichs"
+date: "May 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Datos
+
+
+```{r,echo = FALSE}
+# cargamos los datos 
+library(readxl)
+dataset <- read_excel("data/Dataset para enfoque 2 y 3.xlsx")
+# escalamos dataset en valores 0 a 1
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+data <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
+# desordenamos el dataset
+data <- data[sample(1:31),]
+# cual es la variable de clase HARDCODEO
+Y <- 1 # COLUMNA 1 
+```
+
+Este dataset tiene `r ncol(data)` variables en total, contando la variable de clase llamada `r colnames(data)[Y]`. El dataset consta de `r nrow(data)` datapoints o muestras clasificadas en `r length(unique(data[,Y]))` clases etiquetadas como `r unique(data[,Y])`
+
+En el siguiente cuadro y gráfico observamos como se distribuyen las muestras según su origen. 
+Notamos que el dataset está desbalanceado, pues no hay la misma cantidad de datapoints para cada clase.
+
+```{r results='asis',echo = FALSE}
+suppressMessages(library(tidyverse))
+d <- data %>% group_by(Origen) %>% summarise(n = n())
+knitr::kable(d, caption = "Tabla que muestra distribución de datapoints por clase")
+```
+```{r,echo = FALSE}
+library(ggplot2)
+ggplot(data=d, aes(x=Origen, y=n)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  theme_minimal()
+```
+
+```{r}
+library(caret)
+x = data[,-1]
+y = data$Origen
+#index <- sample(1:nrow(data), round(nrow(data) * 0.7))
+#train <- data[index,]
+#test <- data[-index,]
+SEED <- 1234 # seed semilla para números aleatorios
+set.seed(SEED)
+mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
+
+METRIC <- "ROC" #Accuracy
+train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+
+my.grid <- expand.grid(.decay = c(0.5, 0.1), .size = c(5, 6, 7))
+
+set.seed(SEED)
+mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 6))
+train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+model.nnet <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="nnet", tuneGrid=my.grid,
+                  maxit = 1000, trace = F,metric=METRIC)
+
+p <- predict(model.nnet$finalModel,x,type="class")
+
+print(table(p,y))
+
+plot(model.nnet)
+# TODO arreglar error The metric ROC was not in the result set, accuracy will be used instead
+```
+
