@@ -12,10 +12,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readxl)
 library(DataExplorer)
-dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+#dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+dataset <- read_excel("data/Dataset para enfoque 2 y 3.xlsx")
 # preparacion de datos
+#data <- dataset[-1]
+#data <- scale(data)
+```
+
+```{r}
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
+
 data <- dataset[-1]
-data <- scale(data)
 ```
 ## Clustering intro
 
