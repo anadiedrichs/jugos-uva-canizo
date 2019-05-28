@@ -2,11 +2,18 @@
 title: "clasificacion"
 author: "Ana Diedrichs"
 date: "May 22, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+```
+```{r}
+library(ggplot2)
+suppressMessages(library(tidyverse))
 ```
 
 # Datos
@@ -31,16 +38,29 @@ En el siguiente cuadro y gráfico observamos como se distribuyen las muestras se
 Notamos que el dataset está desbalanceado, pues no hay la misma cantidad de datapoints para cada clase.
 
 ```{r results='asis',echo = FALSE}
-suppressMessages(library(tidyverse))
+
 d <- data %>% group_by(Origen) %>% summarise(n = n())
 knitr::kable(d, caption = "Tabla que muestra distribución de datapoints por clase")
 ```
-```{r,echo = FALSE}
-library(ggplot2)
-ggplot(data=d, aes(x=Origen, y=n)) +
+```{r}
+
+myplot <- ggplot(data=d, aes(x=Origen, y=n)) +
   geom_bar(stat="identity", fill="steelblue")+
   theme_minimal()
+
+print(myplot)
 ```
+# Experimentos
+
+Sobre el total del dataset emplearemos k-fold cross validation con k=4 para los modelos:
+
+* LDA linear discriminant analysis
+* nnet neural networks
+
+Al final se muestran los resultados de los modelos sobre cross validation, agrupados.
+
+
+## LDA 
 
 ```{r}
 library(caret)
@@ -53,8 +73,25 @@ SEED <- 1234 # seed semilla para números aleatorios
 set.seed(SEED)
 mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
 
-METRIC <- "ROC" #Accuracy
+METRIC <- "Accuracy" #
 train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+
+set.seed(SEED)
+mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
+train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+model.lda <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="lda",metric=METRIC)
+
+p <- predict(model.lda$finalModel,x,type="class")
+
+```
+
+```{r}
+print(table(p$class,y))
+```
+
+## Neural network
+```{r}
 
 my.grid <- expand.grid(.decay = c(0.5, 0.1), .size = c(5, 6, 7))
 
@@ -69,7 +106,43 @@ p <- predict(model.nnet$finalModel,x,type="class")
 
 print(table(p,y))
 
+```
+```{r}
+
 plot(model.nnet)
-# TODO arreglar error The metric ROC was not in the result set, accuracy will be used instead
 ```
 
+## glmnet
+
+```{r}
+
+set.seed(SEED)
+mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
+
+train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+model.glmnet <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="glmnet",metric=METRIC)
+
+p <- predict(model.lda$finalModel,x,type="class")
+
+```
+
+```{r}
+print(table(p$class,y))
+```
+
+## Comparación modelos
+```{r}
+
+results <- resamples(list(LDA=model.lda,nnet=model.nnet,glmnet=model.glmnet))
+# summarize the distributions
+summary(results)
+# boxplots of results
+bwplot(results)
+# dot plots of results
+dotplot(results)
+
+```
+Observamos que  la red neuronal tuvo un mejor desempeño que LDA.
+
+## **TODO agregar bootstrapping con neural networks**
