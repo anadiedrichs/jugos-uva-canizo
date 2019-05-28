@@ -18,7 +18,7 @@ library(factoextra)
 ```
 ```{r}
 library(readxl)
-dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+dataset <- read_excel("../data/dataset para análisis exploratorio.xlsx")
 ```
 ```{r}
 pca.model <- prcomp(dataset[-1],scale. = TRUE)

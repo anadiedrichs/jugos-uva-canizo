@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(DataExplorer)
 #dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
-dataset <- read_excel("data/Dataset para enfoque 2 y 3.xlsx")
+dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
 ```
 
 ```{r}
