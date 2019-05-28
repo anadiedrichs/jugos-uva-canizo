@@ -2,7 +2,9 @@
 title: "Clustering"
 author: "Ana Laura Diedrichs"
 date: "May 22, 2019"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +22,7 @@ dataset <- read_excel("data/Dataset para enfoque 2 y 3.xlsx")
 ```
 
 ```{r}
+# normalizamos los datos entre 0 y 1
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
@@ -28,7 +31,13 @@ data <- dataset[-1]
 ```
 ## Clustering intro
 
-### K-means
+Vamos a aplicar un enfoque no supervisado sobre los datos mediante agrupamiento, sin considerar la etiqueta Origen o variable de clase. Sí usaremos la misma para relacionar y analizar el agrupamiento obtenido.
+
+
+Primero usaremos k-means. Previo al uso de este algoritmo, los datos no deben tener valores NULOS o perdidos y son escalados entre 0 y 1.
+
+En el siguiente gráfico muestra como la suma del cuadrado de las distancias intra-cluster disminuye a medida que se agrega un cluster (aumenta k) en kmeans. Computamos el WSS para distintos números de clusteres para k-means para entender como disminuye el total within-cluster sum of square (WSS) a medida que se incrementan los clústeres.
+
 ```{r}
 # Determine number of clusters
 wss <- (nrow(data)-1)*sum(apply(data,2,var))
@@ -37,38 +46,126 @@ for (i in 2:15) wss[i] <- sum(kmeans(data,
 plot(1:15, wss, type="b", xlab="Number of Clusters",
   ylab="Within groups sum of squares")
 ```
+
+Observamos que de un k=1 a un k=2 disminuye en un tercio el WSS. 
+
+### K-means
+
+Aplicamos k-means clustering considerando $k=2$.
+
 ```{r}
-set.seed(1257)
+set.seed(11235)
 # K-Means Cluster Analysis
-fit <- kmeans(data, 3) # 2 cluster solution
-# get cluster means 
-aggregate(data,by=list(fit$cluster),FUN=mean)
+fit <- kmeans(data, centers=2,nstart = 50) # 2 cluster solution
 # append cluster assignment
 mydata <- data.frame(data, fit$cluster)
-
-cbind(mydata$fit.cluster,dataset$Origen)
+fit
+#cbind(mydata$fit.cluster,dataset$Origen)
 ```
+```{r}
+# get cluster means 
+aggregate(data,by=list(fit$cluster),FUN=mean)
+
+```
+
+En la siguiente tabla observamos la distribución de observaciones entre los dos clústeres, según el origen
+```{r}
+table(mydata$fit.cluster,dataset$Origen)
+```
+
+Observamos que para el clúster "2" han sido asignadas la mayoría de las muestras de Argentina, unas `r table(mydata$fit.cluster,dataset$Origen)["2","AR"]` en total y tan solo `r table(mydata$fit.cluster,dataset$Origen)["2","BR"]` de Brasil.
+
+
+#### Análisis o visualización de clústers, k=2
+
+```{r }
+k.1 <- dataset[fit$cluster==1,]
+k.2 <- dataset[fit$cluster==2,]
+```
+
+A continuación mostramos la distribución (histograma) de las muestras que fueron agrupadas para el clúster 1 y para el 2.
+
+**¿Qué características podemos extraer de esto?**
+
+```{r }
+plot_boxplot(k.1, by = "Origen")
+```
+#### Cluster 2
+
+```{r }
+plot_boxplot(k.2, by = "Origen")
+```
+
+Para graficar las observaciones agrupadas en los clusteres, dado que tenemos más de dos dimensiones, se nos complica graficar mas bien visualizar en dos ejes. Usamos la libreria cluster que reduce las dimensiones y permite graficar los clústeres.
+
 ```{r}
 library(cluster) 
 clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, 
    labels=2, lines=0)
 ```
 
+### Ahora k= 3 
+
+Realizamos el mismo experimento pero con $k=3$
+
+```{r}
+set.seed(11235)
+# K-Means Cluster Analysis
+fit2 <- kmeans(data, centers=3)
+# get cluster means 
+aggregate(data,by=list(fit2$cluster),FUN=mean)
+# append cluster assignment
+mydata <- data.frame(data, fit2$cluster)
+
+#cbind(mydata$fit.cluster,dataset$Origen)
+```
+
+En la siguiente tabla observamos la distribución de observaciones entre los 3 clústeres, según el origen.
+Notamos que el cluster 3 tiene la mitad de las muestras de Brasil, el cluster 2 la mayoría de las muestras de Argentina, un `r table(mydata$fit2.cluster,dataset$Origen)["2","AR"]/sum(table(mydata$fit2.cluster,dataset$Origen)[,"AR"]) * 100` %.
+
+```{r}
+table(mydata$fit2.cluster,dataset$Origen)
+```
+```{r}
+# vary parameters for most readable graph
+clusplot(data, fit2$cluster, color=TRUE, shade=TRUE, 
+   labels=2, lines=0)
+
+# Centroid Plot against 1st 2 discriminant functions
+library(fpc)
+plotcluster(data, fit2$cluster)
+```
+
+Comparamos las dos soluciones de clustering 
+
+Estadisticas de cluster con k=2
+
+```{r}
+library(fpc)
+distancia <- dist(data)
+cluster.stats(distancia, fit$cluster)
+```
+Estadisticas de cluster k=3
+```{r}
+library(fpc)
+distancia <- dist(data)
+cluster.stats(distancia, fit2$cluster)
+```
+
+**ANA: de aquí en adelante no realicé análisis aún**
+
+### Clustering por la mediana: 
+
+El uso de la media implica que k-means clustering sea altamente sensible a outliers o valores extremos.
+Esto puede afectar severamente la asignación de observaciones a los clústeres.
+El algoritmo PAM es más robusto.
+
+```{r}
+
+```
 
 
-```{r }
-k.1 <- dataset[fit$cluster==1,]
-k.2 <- dataset[fit$cluster==2,]
-```
-#### Cluster 1
-```{r }
-plot_histogram(k.1)
-```
-#### Cluster 2
 
-```{r }
-plot_histogram(k.2)
-```
 ### Clustering jerárquico
 
 #### Ward Hierarchical Clustering
@@ -93,7 +190,8 @@ plot(fit) # dendogram with p values
 pvrect(fit, alpha=.95)
 ```
 
-### Mas info en 
+### Mas info o info extra 
+
 https://uc-r.github.io/kmeans_clustering
 
 https://www.semanticscholar.org/paper/Clustering-Methods-and-Their-Uses-in-Computational-Downs-Barnard/d81cea597b15deebd940873ee12a4e44019e25af
