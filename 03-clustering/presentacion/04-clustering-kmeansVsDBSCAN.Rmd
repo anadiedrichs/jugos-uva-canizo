@@ -343,11 +343,13 @@ summary(group1)
 * Tanto DBSCAN como kmeans se ven afectados por la variabilidad de las mediciones / valores extremos.
 * Ninguno de los grupos es fácilmente identificable, excepto caso k-means k=2 donde agrupó la mayoría de las observaciones de Argentina en uno de los clusters.
 
-## Mas info o info extra 
+## Referencias
 
-https://uc-r.github.io/kmeans_clustering
+* Fuente primer gif de k-means
+http://shabal.in/visuals.html
+* Segundo gif fuente 
+https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/
 
-https://www.semanticscholar.org/paper/Clustering-Methods-and-Their-Uses-in-Computational-Downs-Barnard/d81cea597b15deebd940873ee12a4e44019e25af
 
-http://crdd.osdd.net/clusters.php
+
 
