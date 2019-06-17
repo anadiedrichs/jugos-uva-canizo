@@ -1,0 +1,332 @@
+---
+title: "Clustering"
+author: "Ana Laura Diedrichs"
+date: "May 22, 2019"
+output: slidy_presentation  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r}
+suppressMessages(library(readxl))
+suppressMessages(library(DataExplorer))
+suppressMessages(library(factoextra)) # dataset multishapes
+
+library("fpc") # algoritmo dbscan
+#dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
+dataset <- read_excel("../../data/Dataset para enfoque 2 y 3.xlsx")
+# preparacion de datos
+#data <- dataset[-1]
+#data <- scale(data)
+```
+
+```{r}
+# normalizamos los datos entre 0 y 1
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
+
+data <- dataset[-1]
+```
+## Clustering intro
+
+## Intuición
+
+![Cajón desordenado](cajon-desordenado.jpg)
+
+## Intuición
+
+![Cajón ordenado](cajon-ordenado.jpg)
+
+
+
+## Intuición
+
+* Agrupación de ítems "más cercanos"
+* Se debe tener una definición de "distancia"
+* Una técnica muy utilizada en minería de datos, ejemplos:
+  + Grupos de clientes o consumidores
+  + En genética: identificación de fenotipos
+* Ventaja: no hace falta tener una "etiqueta" previa en los datos.
+* Utilizado para "descubrir conocimiento" en los datos
+* Utilizado para encontrar observaciones relacionadas en los datos.
+
+## K-means
+
+Algo de info o intro
+https://en.wikipedia.org/wiki/K-means_clustering
+https://es.wikipedia.org/wiki/K-medias
+
+* Ventajas:
+  + algoritmo sencillo y fácil de computar
+  + uno de los algortimos de clustering más rápidos para computar.
+  
+## K-means en acción: ejemplo 1
+
+![K-means en acción](random.gif)
+
+
+## K-means en acción: ejemplo 2
+
+![K-means en acción](kmeans.gif)
+
+
+## Jugos de uva: datos
+
+```{r }
+library(DataExplorer)
+plot_boxplot(dataset,by="Origen")
+
+```
+## Dataset jugos de uva: plot de pares
+
+```{r}
+#este plot demora un poco en realizarse
+library("GGally")
+library(ggplot2)
+pm <- ggpairs(dataset, mapping = aes(color = Origen), columns = colnames(dataset)[-ncol(dataset)])
+pm
+```
+
+
+## Problema clasificación en origen de jugos de uva
+
+Vamos a aplicar un enfoque no supervisado sobre los datos mediante agrupamiento, 
+sin considerar la etiqueta Origen o variable de clase. Sí usaremos la misma para relacionar y analizar el agrupamiento obtenido.
+
+Primero usaremos k-means. Previo al uso de este algoritmo, los datos no deben tener valores NULOS o perdidos y son escalados entre 0 y 1.
+
+## WSS o suma total de las distancias al cuadrado en cada cluster
+
+En el siguiente gráfico muestra como la suma del cuadrado de las distancias intra-cluster disminuye a medida que se agrega un cluster (aumenta k) en kmeans para este dataset. 
+Computamos el WSS para distintos números de clusteres para k-means para entender como disminuye el total within-cluster sum of square (WSS) a medida que se incrementan los clústeres.
+
+```{r}
+# Determine number of clusters
+wss <- (nrow(data)-1)*sum(apply(data,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(data, 
+   centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+```
+
+Observamos que de un k=1 a un k=2 disminuye en un tercio el WSS. 
+
+## K-means experimento k=2
+
+Aplicamos k-means clustering considerando $k=2$.
+
+```{r.echo=TRUE}
+set.seed(11235)
+fit <- kmeans(data, centers=2,nstart = 50) # 2 cluster solution
+# append cluster assignment
+mydata <- data.frame(data, fit$cluster)
+fit
+#cbind(mydata$fit.cluster,dataset$Origen)
+```
+## K-means k=2 
+Valores medios de los clusters.
+
+```{r}
+# get cluster means 
+aggregate(data,by=list(fit$cluster),FUN=mean)
+
+```
+
+## K-means experimento k=2
+
+En la siguiente tabla observamos la distribución de observaciones entre los dos clústeres, según el origen
+```{r}
+table(mydata$fit.cluster,dataset$Origen)
+```
+
+Observamos que para el clúster "2" han sido asignadas la mayoría de las muestras de Argentina, unas `r table(mydata$fit.cluster,dataset$Origen)["2","AR"]` en total y tan solo `r table(mydata$fit.cluster,dataset$Origen)["2","BR"]` de Brasil.
+
+
+## Análisis o visualización de clústers, k=2
+
+```{r }
+k.1 <- dataset[fit$cluster==1,]
+k.2 <- dataset[fit$cluster==2,]
+```
+
+A continuación mostramos la distribución (histograma) de las muestras que fueron agrupadas para el clúster 1 y para el 2.
+
+## ¿Qué características podemos extraer de esto? Cluster 1
+
+```{r }
+plot_boxplot(k.1, by = "Origen")
+```
+## Cluster 2
+
+```{r }
+plot_boxplot(k.2, by = "Origen")
+```
+
+## Graficando varias dimensiones
+
+Para graficar las observaciones agrupadas en los clusteres, dado que tenemos más de dos dimensiones, se nos complica graficar mas bien visualizar en dos ejes. Usamos la libreria cluster que reduce las dimensiones y permite graficar los clústeres.
+
+```{r}
+library(cluster) 
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, 
+   labels=2, lines=0)
+```
+
+## Ahora k= 3 
+
+Realizamos el mismo experimento pero con $k=3$
+
+```{r}
+set.seed(11235)
+# K-Means Cluster Analysis
+fit2 <- kmeans(data, centers=3)
+# get cluster means 
+aggregate(data,by=list(fit2$cluster),FUN=mean)
+# append cluster assignment
+mydata <- data.frame(data, fit2$cluster)
+
+#cbind(mydata$fit.cluster,dataset$Origen)
+```
+
+En la siguiente tabla observamos la distribución de observaciones entre los 3 clústeres, según el origen.
+Notamos que el cluster 3 tiene la mitad de las muestras de Brasil, el cluster 2 la mayoría de las muestras de Argentina, un `r table(mydata$fit2.cluster,dataset$Origen)["2","AR"]/sum(table(mydata$fit2.cluster,dataset$Origen)[,"AR"]) * 100` %.
+
+```{r}
+table(mydata$fit2.cluster,dataset$Origen)
+```
+
+## k=3 Gráfico
+
+```{r}
+# vary parameters for most readable graph
+clusplot(data, fit2$cluster, color=TRUE, shade=TRUE, 
+   labels=2, lines=0)
+
+# Centroid Plot against 1st 2 discriminant functions
+library(fpc)
+plotcluster(data, fit2$cluster)
+```
+
+## Comparamos las dos soluciones de clustering 
+
+Estadisticas de cluster con k=2
+
+```{r}
+library(fpc)
+distancia <- dist(data)
+cluster.stats(distancia, fit$cluster)
+```
+
+## Comparamos las dos soluciones de clustering 
+
+Estadisticas de cluster k=3
+```{r}
+library(fpc)
+distancia <- dist(data)
+cluster.stats(distancia, fit2$cluster)
+```
+
+
+## Otro enfoque
+
+Para ciertos datos como el que sigue, k-means no los "agrupa" correctamente.
+```{r}
+
+data("multishapes")
+df <- multishapes[,1:2]
+#' dataset original
+plot(df) 
+
+```
+Vemos el resultado de como resulta k-means con el dataset 
+```{r}
+#' kmeans
+set.seed(123)
+km.res <- kmeans(df, 5, nstart = 25)
+
+#' mostrar como quedaron los clusters con la imagen
+fviz_cluster(km.res, df, frame = FALSE, geom = "point")
+```
+
+## Density-based spatial clustering of applications with noise (DBSCAN )
+
+¿ Qué es DBSCAN ? Leer algunos recursos como:
+
+* https://en.wikipedia.org/wiki/DBSCAN
+* Martin Ester, Hans-Peter Kriegel, Joerg Sander, Xiaowei Xu (1996). A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise. Institute for Computer Science, University of Munich. Proceedings of 2nd International Conference on Knowledge Discovery and Data Mining (KDD-96).
+
+## DBSCAN
+
+Vamos a probar realizar clustering con DBSCAN.
+
+Mostramos un dataset que es más desafiante para clasificar con kmeans, utilizado anteriormente.
+
+```{r }
+data(multishapes)
+plot(multishapes[,1], multishapes[, 2])
+```
+
+## DBSCAN en acción
+
+Ahora realizamos clustering con DBSCAN sobre el dataset mostrado anteriormente.
+
+```{r}
+library("fpc")
+set.seed(123)
+df <- multishapes[,1:2]
+db <- fpc::dbscan(df, eps = 0.15, MinPts = 5)
+plot(db, df, main = "DBSCAN", frame = FALSE)
+```
+
+## DBSCAN para el problema de los Jugos
+
+El comportamiento de DBSCAN es muy sensible al cambio en los valores eps (radio desde el centro) y MinPts (cantidad de puntos mínima del cluster)
+```{r}
+#Notar que es muy diferente el resultado a medida que modificamos e parametro eps y MinPts.
+set.seed(123)
+db <- fpc::dbscan(data, eps = 0.65, MinPts = 3)
+fviz_cluster(db,data)
+
+
+```
+Las observaciones o muestras 1,3,4,7,10 las toma como outliers o valores extremos.
+
+En la siguiente tabla se muestra como 0 las observaciones que consideró outliers vs su clasificación de origen inicial.
+
+```{r}
+table(db$cluster,dataset$Origen)
+```
+
+Caracteristias del grupo 2 o mayoría de las observaciones.
+```{r}
+group2 <- dataset[db$cluster==2,]
+plot_histogram(group2)
+summary(group2)
+```
+
+Caracteristias del grupo 1 
+```{r}
+group1 <- dataset[db$cluster==1,]
+plot_histogram(group1)
+summary(group1)
+```
+
+## Conclusiones
+
+* Son pocas muestras (30) por lo que no nos animamos a realizar conclusiones globales
+* Se observa en ambos algoritmos que al menos uno de los grupos contiene solo observaciones de Argentina
+* Tanto DBSCAN como kmeans se ven afectados por la variabilidad de las mediciones / valores extremos.
+* Ninguno de los grupos es fácilmente identificable, excepto caso k-means k=2 donde agrupó la mayoría de las observaciones de Argentina en uno de los clusters.
+
+## Mas info o info extra 
+
+https://uc-r.github.io/kmeans_clustering
+
+https://www.semanticscholar.org/paper/Clustering-Methods-and-Their-Uses-in-Computational-Downs-Barnard/d81cea597b15deebd940873ee12a4e44019e25af
+
+http://crdd.osdd.net/clusters.php
+
