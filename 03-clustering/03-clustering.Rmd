@@ -152,6 +152,7 @@ distancia <- dist(data)
 cluster.stats(distancia, fit2$cluster)
 ```
 
+
 **ANA: de aquí en adelante no realicé análisis aún**
 
 ### Clustering por la mediana: 
