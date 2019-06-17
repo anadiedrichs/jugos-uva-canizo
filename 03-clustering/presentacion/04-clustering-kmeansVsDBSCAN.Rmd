@@ -95,11 +95,10 @@ plot_boxplot(dataset,by="Origen")
 pairs(dataset[,-1],colnames(dataset[-1]),pch = 21,bg = c("red", "green3", "blue")[unclass(as.factor(dataset$Origen))])
 ```
 
-## Dataset jugos de uva: plot de pares
 
-```{r}
+```{r,eval=FALSE}
 #este plot demora un poco en realizarse
-
+# por eso eval=FALSE para que no lo ejecute.
 pm <- suppressMessages(ggpairs(dataset, mapping = aes(color = Origen), columns = colnames(dataset)[-ncol(dataset)]))
 pm
 ```
