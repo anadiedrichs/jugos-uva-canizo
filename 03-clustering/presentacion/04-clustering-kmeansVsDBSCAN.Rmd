@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 suppressMessages(library(readxl))
 suppressMessages(library(DataExplorer))
 suppressMessages(library(factoextra)) # dataset multishapes
+suppressMessages( library("GGally"))
+suppressMessages(library(ggplot2))
 
 library("fpc") # algoritmo dbscan
 #dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
@@ -81,13 +83,24 @@ library(DataExplorer)
 plot_boxplot(dataset,by="Origen")
 
 ```
+
+## Dataset jugos de uva: plot de pares
+
+* AR: rojo
+* BR: azul
+* CH: verde
+
+```{r}
+
+pairs(dataset[,-1],colnames(dataset[-1]),pch = 21,bg = c("red", "green3", "blue")[unclass(as.factor(dataset$Origen))])
+```
+
 ## Dataset jugos de uva: plot de pares
 
 ```{r}
 #este plot demora un poco en realizarse
-library("GGally")
-library(ggplot2)
-pm <- ggpairs(dataset, mapping = aes(color = Origen), columns = colnames(dataset)[-ncol(dataset)])
+
+pm <- suppressMessages(ggpairs(dataset, mapping = aes(color = Origen), columns = colnames(dataset)[-ncol(dataset)]))
 pm
 ```
 
@@ -98,22 +111,6 @@ Vamos a aplicar un enfoque no supervisado sobre los datos mediante agrupamiento,
 sin considerar la etiqueta Origen o variable de clase. Sí usaremos la misma para relacionar y analizar el agrupamiento obtenido.
 
 Primero usaremos k-means. Previo al uso de este algoritmo, los datos no deben tener valores NULOS o perdidos y son escalados entre 0 y 1.
-
-## WSS o suma total de las distancias al cuadrado en cada cluster
-
-En el siguiente gráfico muestra como la suma del cuadrado de las distancias intra-cluster disminuye a medida que se agrega un cluster (aumenta k) en kmeans para este dataset. 
-Computamos el WSS para distintos números de clusteres para k-means para entender como disminuye el total within-cluster sum of square (WSS) a medida que se incrementan los clústeres.
-
-```{r}
-# Determine number of clusters
-wss <- (nrow(data)-1)*sum(apply(data,2,var))
-for (i in 2:15) wss[i] <- sum(kmeans(data, 
-   centers=i)$withinss)
-plot(1:15, wss, type="b", xlab="Number of Clusters",
-  ylab="Within groups sum of squares")
-```
-
-Observamos que de un k=1 a un k=2 disminuye en un tercio el WSS. 
 
 ## K-means experimento k=2
 
@@ -127,6 +124,8 @@ mydata <- data.frame(data, fit$cluster)
 fit
 #cbind(mydata$fit.cluster,dataset$Origen)
 ```
+
+
 ## K-means k=2 
 Valores medios de los clusters.
 
@@ -160,6 +159,8 @@ A continuación mostramos la distribución (histograma) de las muestras que fuer
 ```{r }
 plot_boxplot(k.1, by = "Origen")
 ```
+
+
 ## Cluster 2
 
 ```{r }
@@ -230,6 +231,21 @@ distancia <- dist(data)
 cluster.stats(distancia, fit2$cluster)
 ```
 
+## WSS o suma total de las distancias al cuadrado en cada cluster
+
+En el siguiente gráfico muestra como la suma del cuadrado de las distancias intra-cluster disminuye a medida que se agrega un cluster (aumenta k) en kmeans para este dataset. 
+Computamos el WSS para distintos números de clusteres para k-means para entender como disminuye el total within-cluster sum of square (WSS) a medida que se incrementan los clústeres.
+
+```{r}
+# Determine number of clusters
+wss <- (nrow(data)-1)*sum(apply(data,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(data, 
+   centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+```
+
+Observamos que de un k=1 a un k=2 disminuye en un tercio el WSS. Dado los pocos datos (31), aumentar k también disminuye el número de muestras por grupo y ya no tendria sentido para este problema.
 
 ## Otro enfoque
 
@@ -242,7 +258,10 @@ df <- multishapes[,1:2]
 plot(df) 
 
 ```
+
+
 Vemos el resultado de como resulta k-means con el dataset 
+
 ```{r}
 #' kmeans
 set.seed(123)
@@ -282,9 +301,11 @@ db <- fpc::dbscan(df, eps = 0.15, MinPts = 5)
 plot(db, df, main = "DBSCAN", frame = FALSE)
 ```
 
+
 ## DBSCAN para el problema de los Jugos
 
 El comportamiento de DBSCAN es muy sensible al cambio en los valores eps (radio desde el centro) y MinPts (cantidad de puntos mínima del cluster)
+
 ```{r}
 #Notar que es muy diferente el resultado a medida que modificamos e parametro eps y MinPts.
 set.seed(123)
@@ -315,9 +336,10 @@ plot_histogram(group1)
 summary(group1)
 ```
 
-## Conclusiones
 
-* Son pocas muestras (30) por lo que no nos animamos a realizar conclusiones globales
+## Conclusiones
+* Se observan algunas variables que pueden ser buenas para clasificar en origen, dado este dataset como Cr.
+* Son pocas muestras (31) por lo que no nos animamos a realizar conclusiones globales
 * Se observa en ambos algoritmos que al menos uno de los grupos contiene solo observaciones de Argentina
 * Tanto DBSCAN como kmeans se ven afectados por la variabilidad de las mediciones / valores extremos.
 * Ninguno de los grupos es fácilmente identificable, excepto caso k-means k=2 donde agrupó la mayoría de las observaciones de Argentina en uno de los clusters.
