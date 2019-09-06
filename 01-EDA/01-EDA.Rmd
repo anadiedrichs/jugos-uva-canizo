@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
 ```
 
 ```{r}
@@ -25,7 +26,8 @@ dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
 #dataset <- data.frame(cbind(dataset$Origen, scale(dataset[-1], center = mins, scale = maxs) - mins))
 #colnames(dataset)[1] <- "Origen"
 
-dataset
+# quitamos chile del medio
+dataset <- dataset %>% filter(Origen != "CH")
 ```
 
 ## Distribución de las variables

@@ -18,7 +18,9 @@ library(factoextra)
 ```
 ```{r}
 library(readxl)
+library(dplyr)
 dataset <- read_excel("../data/dataset para análisis exploratorio.xlsx")
+dataset <- dataset %>% filter(Origen != "CH")
 ```
 ```{r}
 pca.model <- prcomp(dataset[-1],scale. = TRUE)
