@@ -1,18 +1,19 @@
 ---
 title: "Análisis exploratorio de los datos"
 author: "Ana Laura Diedrichs & Brenda Canizo"
-date: "May 22, 2019"
+date: "10 de setiembre 2019"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
+knitr::opts_chunk$set(echo = FALSE)
+
 ```
 
 ```{r}
-library(readxl)
-library(DataExplorer)
+suppressMessages(library(dplyr))
+suppressMessages(library(readxl))
+suppressMessages(library(DataExplorer))
 #dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
 dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
 ```
@@ -34,30 +35,46 @@ dataset <- dataset %>% filter(Origen != "CH")
 
 ### Intro al dataset
 
+El dataset de jugos de uva posee `r nrow(dataset)` muestras etiquetadas según origen sea Brasil o Argentina como `r unique(dataset$Origen)`. Las variables, columnas, son elementos de la tabla períodica, correspondiendo con un análisis multielemental, representando concentraciones. Las variables son `r colnames(dataset[-1])`
+
+Un breve resumen introductorio del dataset
 ```{r}
-t(introduce(dataset))
+t(introduce(dataset)) %>% knitr::kable()
 ```
 
-### Boxplot
 
+Observamos la distribución de las muestras según el Origen.
+
+```{r}
+dataset %>% select(Origen) %>% group_by(Origen) %>%  tally() %>% knitr::kable()
+```
+
+
+### Distribución de las concentraciones por Origen
+
+La densidad o distribución de las concentraciones de los elementos del dataset puede visualizarse a continuación
+
+```{r}
+library(DataExplorer)
+plot_density(dataset)
+```
+
+Mostramos la distribución según el origen:
 
 ```{r }
-library(DataExplorer)
 plot_boxplot(dataset,by="Origen")
 
 ```
-### Histograma
 
-```{r}
-plot_histogram(dataset)
-```
 
-### Densidad estimada
+Observamos una diferencia muy notable en la mediana de las distribución de ciertos elementos respecto a su Origen: Fe, Rb, Pd, Y
 
-```{r}
-plot_density(dataset)
-```
-## Correlaciones
+Podrían ser variables de interés para clasificar por Origen.
+
+
+## Correlaciones lineales
+
+
 
 ```{r }
 plot_correlation(dataset[-1])
@@ -67,13 +84,28 @@ plot_correlation(dataset[-1])
 #create_report(dataset)
 ```
 
+Observamos una fuerte correlación lineal positiva entre Mo y As, es decir, al aumentar la concentración de uno aumenta la de otro.
+
+
+# Anexo
+
+Info no analizada
+
 ## QQ plot
 
 ```{r}
 plot_qq(dataset)
 ```
-
 ## Pairs plot
+
+```{r}
+#este plot demora tiempo
+library("GGally")
+library(ggplot2)
+ggpairs(dataset, mapping = aes(color = Origen), columns = colnames(dataset)[-1])
+
+
+```
 
 ```{r , echo=FALSE}
 library(caret)
@@ -86,4 +118,5 @@ featurePlot(x=dataset[,c(2,3,4,5,6)], y=as.factor(dataset$Origen),  "pairs", aut
 featurePlot(x=dataset[,c(7,8,9,10,11)], y=as.factor(dataset$Origen),  "pairs", auto.key=list(columns=2))
 
 ```
+
 
