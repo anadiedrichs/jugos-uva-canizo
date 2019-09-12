@@ -24,11 +24,12 @@ suppressMessages(library(tidyverse))
 # cargamos los datos 
 library(readxl)
 dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
+dataset <- dataset %>% filter(Origen != "CH")
 # escalamos dataset en valores 0 a 1
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 data <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
 # desordenamos el dataset
-data <- data[sample(1:31),]
+data <- data[sample(1:nrow(dataset)),]
 # cual es la variable de clase HARDCODEO
 Y <- 1 # COLUMNA 1 
 ```
@@ -124,18 +125,19 @@ train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=T
 model.glmnet <- train(as.factor(Origen)~., data=data, 
                   trControl=train_control, method="glmnet",metric=METRIC)
 
-p <- predict(model.lda$finalModel,x,type="class")
+p <- predict(model.glmnet$finalModel,x,type="class") # <--- TIRA ERROR TODO 
 
 ```
 
 ```{r}
+# <--- TIRA ERROR TODO 
 print(table(p$class,y))
 ```
 
 ## Comparación modelos
 ```{r}
 
-results <- resamples(list(LDA=model.lda,nnet=model.nnet,glmnet=model.glmnet))
+results <- resamples(list(LDA=model.lda,nnet=model.nnet))
 # summarize the distributions
 summary(results)
 # boxplots of results
