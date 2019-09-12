@@ -43,6 +43,8 @@ Notamos que el dataset está desbalanceado, pues no hay la misma cantidad de dat
 d <- data %>% group_by(Origen) %>% summarise(n = n())
 knitr::kable(d, caption = "Tabla que muestra distribución de datapoints por clase")
 ```
+
+
 ```{r,echo=FALSE}
 myplot <- ggplot(data=d, aes(x=Origen, y=n)) +
   geom_bar(stat="identity", fill="steelblue")+
