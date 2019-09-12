@@ -87,9 +87,15 @@ plot_correlation(dataset[-1])
 Observamos una fuerte correlación lineal positiva entre Mo y As, es decir, al aumentar la concentración de uno aumenta la de otro.
 
 
+## Plot de a pares o feature plot 
+```{r}
+
+pairs(dataset[,-1],colnames(dataset[-1]),pch = 21,bg = c("red", "green3", "blue")[unclass(as.factor(dataset$Origen))])
+```
+
 # Anexo
 
-Info no analizada
+Info no analizada o plots extras
 
 ## QQ plot
 
