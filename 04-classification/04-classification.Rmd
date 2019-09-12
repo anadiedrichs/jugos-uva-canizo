@@ -3,16 +3,14 @@ title: "clasificacion"
 author: "Ana Diedrichs"
 date: "May 22, 2019"
 output:
-  pdf_document: default
-  word_document: default
   html_document: default
+  word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-```
-```{r}
 library(ggplot2)
 suppressMessages(library(tidyverse))
 ```
@@ -23,6 +21,7 @@ suppressMessages(library(tidyverse))
 ```{r,echo = FALSE}
 # cargamos los datos 
 library(readxl)
+library(dplyr)
 dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
 dataset <- dataset %>% filter(Origen != "CH")
 # escalamos dataset en valores 0 a 1
@@ -39,20 +38,150 @@ Este dataset tiene `r ncol(data)` variables en total, contando la variable de cl
 En el siguiente cuadro y gráfico observamos como se distribuyen las muestras según su origen. 
 Notamos que el dataset está desbalanceado, pues no hay la misma cantidad de datapoints para cada clase.
 
-```{r results='asis',echo = FALSE}
+```{r ,echo = FALSE}
 
 d <- data %>% group_by(Origen) %>% summarise(n = n())
 knitr::kable(d, caption = "Tabla que muestra distribución de datapoints por clase")
 ```
-```{r}
-
+```{r,echo=FALSE}
 myplot <- ggplot(data=d, aes(x=Origen, y=n)) +
   geom_bar(stat="identity", fill="steelblue")+
   theme_minimal()
 
 print(myplot)
 ```
-# Experimentos
+
+
+# Machine learning: experimentos
+
+Dado que son pocas las muestras que tenemos, para realizar nuestro entrenamiento de los modelos un enfoque 
+de *data split* no sería bueno, ya que dividir los datos en conjunto de entrenamiento y testeo y simplemente validar con esto, no nos estaría brindando resultados muy representativos. Por eso es necesario usar otros enfoques.
+
+Uno de ellos es bootstrapping, también usado cuando se tienen pocas muestras. 
+
+Otro desafío es que no sólo son pocas muestras, sino que el dataset está desbalanceado, es decir, hay más muestras etiquetadas como argentina que muestras etiquetadas como Brasil. Por esto procederemos a balancer el dataset como primer paso a los experimentos. 
+
+## SMOTE 
+
+```{r}
+library(DMwR)
+
+set.seed(9560)
+d <- data[-1]
+d$Origen <- as.factor(data$Origen)
+smote_train <- SMOTE(Origen ~ ., d, perc.over = 50,perc.under = 300,k=8)                         
+table(smote_train$Origen) 
+table(data$Origen)
+```
+
+TODO Plot de datos generados por SMOTE TODO
+
+TODO Hacer experimentos con esos datos: smote y sin smote, ver resultados 
+
+TODO Bootstrapping: ver reproducibilidad de los resultados
+
+TODO Bootstrapping, ver este enfoque http://www.is.uni-freiburg.de/ressourcen/business-analytics/11_Resampling.pdf para mostrar intervalos de confianza
+
+
+
+## Bootstrapping 
+
+
+Usamos bootstrapping o muestreo aleatorio con reemplazo (Ver https://en.wikipedia.org/wiki/Bootstrapping_(statistics)) como forma de entrenamiento.
+
+Los modelos que entrenamos son: LDA (linear discriminant analysis) y redes neuronales.
+
+
+### LDA 
+
+```{r}
+library(caret)
+x = data[,-1] # quito columna Origen
+y = data$Origen
+
+METRIC <- "Accuracy" #
+train_control <- trainControl(method="boot", number=100)
+SEED <- 1234 # seed semilla para números aleatorios
+set.seed(SEED)
+model.lda.boot <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="lda",metric=METRIC)
+
+p <- predict(model.lda.boot$finalModel,x,type="class")
+
+```
+
+Imprimimos información sobre el modelo
+
+```{r}
+print(model.lda.boot)
+```
+
+Los resultados del experimento son:
+
+```{r}
+model.lda.boot$results
+```
+
+Observamos que en promedio con LDA nos brindó un Accuracy de 0.74 y Kappa de 0.46. Un valor Kappa bajo no es indicador confiable para este modelo.
+
+
+### Neural Network
+
+Realizamos el experimento considerando `r 2:7` unidades ocultas o neuronas.
+
+TAmbién se consideran distintos valores de weight decay para entrenar la red neuronal.
+
+"When training neural networks, it is common to use "weight decay," where after each update, the weights are multiplied by a factor slightly less than 1. This prevents the weights from growing too large, and can be seen as gradient descent on a quadratic regularization term. "
+
+```{r}
+my.grid <- expand.grid(.decay = c(0.5, 0.1, 0.01), .size = c(2,3,4,5, 6, 7))
+set.seed(SEED)
+
+model.nnet.boot <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="nnet", tuneGrid=my.grid,
+                  maxit = 1000, trace = F,metric=METRIC)
+
+print(model.nnet.boot)
+```
+
+Veamos los resultados en forma de tabla
+
+```{r}
+model.nnet.boot$results
+```
+
+De la siguiente figura observamos que el Accuracy varía mucho por valor de weight decay que por el número de hidden units. 
+
+Se observa que el parámetro decay = 0.01 muestra los valores óptimos de accuracy.
+
+Con decay en 0.1 y 0.01 los resultados son muy buenos. 
+
+```{r}
+plot(model.nnet.boot)
+```
+
+
+```{r}
+p <- predict(model.nnet.boot$finalModel,x,type="class")
+
+print(table(p,y))
+
+```
+
+## Comparación modelos
+```{r}
+
+results <- resamples(list(LDA=model.lda.boot,nnet=model.nnet.boot))
+# summarize the distributions
+summary(results)
+# boxplots of results
+bwplot(results)
+# dot plots of results
+dotplot(results)
+
+```
+
+## Cross-validation
 
 Sobre el total del dataset emplearemos k-fold cross validation con k=4 para los modelos:
 
@@ -68,10 +197,7 @@ Al final se muestran los resultados de los modelos sobre cross validation, agrup
 library(caret)
 x = data[,-1]
 y = data$Origen
-#index <- sample(1:nrow(data), round(nrow(data) * 0.7))
-#train <- data[index,]
-#test <- data[-index,]
-SEED <- 1234 # seed semilla para números aleatorios
+
 set.seed(SEED)
 mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
 
@@ -95,11 +221,12 @@ print(table(p$class,y))
 ## Neural network
 ```{r}
 
-my.grid <- expand.grid(.decay = c(0.5, 0.1), .size = c(5, 6, 7))
+my.grid <- expand.grid(.decay = c(0.5, 0.1,0.01), .size = c(5, 6, 7))
 
 set.seed(SEED)
-mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 6))
+mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 9))
 train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
+set.seed(SEED)
 model.nnet <- train(as.factor(Origen)~., data=data, 
                   trControl=train_control, method="nnet", tuneGrid=my.grid,
                   maxit = 1000, trace = F,metric=METRIC)
@@ -114,25 +241,6 @@ print(table(p,y))
 plot(model.nnet)
 ```
 
-## glmnet
-
-```{r}
-
-set.seed(SEED)
-mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
-
-train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
-model.glmnet <- train(as.factor(Origen)~., data=data, 
-                  trControl=train_control, method="glmnet",metric=METRIC)
-
-p <- predict(model.glmnet$finalModel,x,type="class") # <--- TIRA ERROR TODO 
-
-```
-
-```{r}
-# <--- TIRA ERROR TODO 
-print(table(p$class,y))
-```
 
 ## Comparación modelos
 ```{r}
@@ -146,9 +254,10 @@ bwplot(results)
 dotplot(results)
 
 ```
+
+
 Observamos que  la red neuronal tuvo un mejor desempeño que LDA.
 
-## **TODO agregar algo con bootstrapping ??**
 
 # chusmeando que daba random forest
 
