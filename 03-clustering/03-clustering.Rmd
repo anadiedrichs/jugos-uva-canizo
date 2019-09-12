@@ -13,9 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(readxl)
+library(dplyr)
 library(DataExplorer)
 #dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
 dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
+dataset <- dataset %>% filter(Origen != "CH")
 # preparacion de datos
 #data <- dataset[-1]
 #data <- scale(data)
@@ -62,6 +64,9 @@ mydata <- data.frame(data, fit$cluster)
 fit
 #cbind(mydata$fit.cluster,dataset$Origen)
 ```
+
+Valores medios de cada variable en cada cluster
+
 ```{r}
 # get cluster means 
 aggregate(data,by=list(fit$cluster),FUN=mean)
@@ -104,52 +109,28 @@ clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE,
    labels=2, lines=0)
 ```
 
-### Ahora k= 3 
-
-Realizamos el mismo experimento pero con $k=3$
+Table
 
 ```{r}
-set.seed(11235)
-# K-Means Cluster Analysis
-fit2 <- kmeans(data, centers=3)
-# get cluster means 
-aggregate(data,by=list(fit2$cluster),FUN=mean)
-# append cluster assignment
-mydata <- data.frame(data, fit2$cluster)
-
-#cbind(mydata$fit.cluster,dataset$Origen)
+table(mydata$fit.cluster,dataset$Origen)
 ```
 
-En la siguiente tabla observamos la distribución de observaciones entre los 3 clústeres, según el origen.
-Notamos que el cluster 3 tiene la mitad de las muestras de Brasil, el cluster 2 la mayoría de las muestras de Argentina, un `r table(mydata$fit2.cluster,dataset$Origen)["2","AR"]/sum(table(mydata$fit2.cluster,dataset$Origen)[,"AR"]) * 100` %.
-
-```{r}
-table(mydata$fit2.cluster,dataset$Origen)
-```
 ```{r}
 # vary parameters for most readable graph
-clusplot(data, fit2$cluster, color=TRUE, shade=TRUE, 
+clusplot(data, fit$cluster, color=TRUE, shade=TRUE, 
    labels=2, lines=0)
 
 # Centroid Plot against 1st 2 discriminant functions
 library(fpc)
-plotcluster(data, fit2$cluster)
+plotcluster(data, fit$cluster)
 ```
 
-Comparamos las dos soluciones de clustering 
-
-Estadisticas de cluster con k=2
+Comparamos estadisticas de cluster con k=2
 
 ```{r}
 library(fpc)
 distancia <- dist(data)
 cluster.stats(distancia, fit$cluster)
-```
-Estadisticas de cluster k=3
-```{r}
-library(fpc)
-distancia <- dist(data)
-cluster.stats(distancia, fit2$cluster)
 ```
 
 
@@ -161,11 +142,6 @@ El uso de la media implica que k-means clustering sea altamente sensible a outli
 Esto puede afectar severamente la asignación de observaciones a los clústeres.
 El algoritmo PAM es más robusto.
 
-```{r}
-
-```
-
-
 
 ### Clustering jerárquico
 
@@ -175,9 +151,9 @@ El algoritmo PAM es más robusto.
 d <- dist(data, method = "euclidean") # distance matrix
 fit <- hclust(d, method="ward")
 plot(fit) # display dendogram
-groups <- cutree(fit, k=3) # cut tree into 5 clusters
+groups <- cutree(fit, k=2) # cut tree into 5 clusters
 # draw dendogram with red borders around the 5 clusters
-rect.hclust(fit, k=3, border="red") 
+rect.hclust(fit, k=2, border="red") 
 ```
 #### Ward Hierarchical Clustering with Bootstrapped p values
 
