@@ -65,6 +65,9 @@ Otro desafío es que no sólo son pocas muestras, sino que el dataset está desb
 
 ## SMOTE 
 
+Synthetic minority sampling technique (SMOTE): down samples the majority class and synthesizes new minority instances by interpolating between existing ones
+
+
 ```{r}
 library(DMwR)
 
@@ -283,3 +286,9 @@ c <- confusionMatrix(as.factor(pred), as.factor(data$Origen),mode = "prec_recall
 print(c)
 ```
 
+Pensamientos finales
+
+
+Referencias o recursos
+
+* https://machinelearningmastery.com/tactics-to-combat-imbalanced-classes-in-your-machine-learning-dataset/
