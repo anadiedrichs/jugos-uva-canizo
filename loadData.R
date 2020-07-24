@@ -1,5 +1,6 @@
 library(stringr)
-library(readr)
+library(readxl)
+library(dplyr)
 
 # normalizamos los datos entre 0 y 1
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
