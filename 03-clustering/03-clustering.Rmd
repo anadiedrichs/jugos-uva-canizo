@@ -5,15 +5,14 @@ date: "24 de julio 2020"
 output:
   html_document: default
   pdf_document: default
+  github_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r, include=FALSE}
-library(readxl)
-library(dplyr)
+```{r, include=FALSE, echo=FALSE}
 library(DataExplorer)
 library(factoextra)
 library(cluster)
@@ -22,7 +21,7 @@ library(fpc)
 ```
 
 
-```{r}
+```{r,message=FALSE}
 
 source("../loadData.R")
 dataset <- load_dataset()

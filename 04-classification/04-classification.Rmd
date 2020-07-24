@@ -3,9 +3,10 @@ title: "clasificacion"
 author: "Ana Diedrichs"
 date: "May 22, 2019"
 output:
-  html_document: default
+  github_document: default
   word_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,16 +20,10 @@ suppressMessages(library(tidyverse))
 
 
 ```{r,echo = FALSE}
-# cargamos los datos 
-library(readxl)
-library(dplyr)
-dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
-dataset <- dataset %>% filter(Origen != "CH")
-# escalamos dataset en valores 0 a 1
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-data <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
+source("../loadData.R")
+dataset <- load_dataset()
 # desordenamos el dataset
-data <- data[sample(1:nrow(dataset)),]
+data <- dataset[sample(1:nrow(dataset)),]
 # cual es la variable de clase HARDCODEO
 Y <- 1 # COLUMNA 1 
 ```
