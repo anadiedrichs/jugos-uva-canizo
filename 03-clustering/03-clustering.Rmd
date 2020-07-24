@@ -3,9 +3,9 @@ title: "Clustering"
 author: "Ana Laura Diedrichs"
 date: "24 de julio 2020"
 output:
-  html_document: default
-  pdf_document: default
   github_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
