@@ -2,25 +2,21 @@
 title: "PCA análisis"
 author: "Ana Laura Diedrichs & Brenda Canizo"
 date: "May 22, 2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-## PCA
-
-```{r}
 library(DataExplorer)
 suppressMessages(library(ggfortify))
 library(factoextra)
 ```
-```{r}
-library(readxl)
-library(dplyr)
-dataset <- read_excel("../data/dataset para análisis exploratorio.xlsx")
-dataset <- dataset %>% filter(Origen != "CH")
+
+## PCA
+
+```{r load-dataset}
+source("../loadData.R")
+dataset <- load_dataset()
 ```
 ```{r}
 pca.model <- prcomp(dataset[-1],scale. = TRUE)

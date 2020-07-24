@@ -2,7 +2,7 @@
 title: "Análisis exploratorio de los datos"
 author: "Ana Laura Diedrichs & Brenda Canizo"
 date: "10 de setiembre 2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -14,21 +14,11 @@ knitr::opts_chunk$set(echo = FALSE)
 suppressMessages(library(dplyr))
 suppressMessages(library(readxl))
 suppressMessages(library(DataExplorer))
-#dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
-dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
 ```
 
 ```{r}
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-
-dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
-#maxs <- apply(dataset[-1], 2, max)
-#mins <- apply(dataset[-1], 2, min)
-#dataset <- data.frame(cbind(dataset$Origen, scale(dataset[-1], center = mins, scale = maxs) - mins))
-#colnames(dataset)[1] <- "Origen"
-
-# quitamos chile del medio
-dataset <- dataset %>% filter(Origen != "CH")
+source("../loadData.R")
+dataset <- load_dataset()
 ```
 
 ## Distribución de las variables
