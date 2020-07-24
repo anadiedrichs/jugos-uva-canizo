@@ -1,7 +1,7 @@
 ---
 title: "Clustering"
 author: "Ana Laura Diedrichs"
-date: "May 22, 2019"
+date: "24 de julio 2020"
 output:
   html_document: default
   pdf_document: default
@@ -18,21 +18,16 @@ library(DataExplorer)
 library(factoextra)
 library(cluster)
 library(fpc)
-#dataset <- read_excel("data/dataset para análisis exploratorio.xlsx")
-dataset <- read_excel("../data/Dataset para enfoque 2 y 3.xlsx")
-dataset <- dataset %>% filter(Origen != "CH")
-# preparacion de datos
-#data <- dataset[-1]
-#data <- scale(data)
+
 ```
 
+
 ```{r}
-# normalizamos los datos entre 0 y 1
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
-dataset <- data.frame(dataset[,1], apply(dataset[-1],2,range01))
-
+source("../loadData.R")
+dataset <- load_dataset()
 data <- dataset[-1]
+
 ```
 # Clustering intro
 
