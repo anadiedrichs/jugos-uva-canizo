@@ -100,7 +100,7 @@ x = data[,-1] # quito columna Origen
 y = as.factor(data$Origen)
 
 METRIC <- "Accuracy" #
-train_control <- trainControl(method="boot", number=100)
+train_control <- trainControl(method="boot", number=100) # en el paper era 100
 SEED <- 1234 # seed semilla para números aleatorios
 set.seed(SEED)
 model.lda.boot <- train(as.factor(Origen)~., data=data, 
@@ -227,16 +227,30 @@ print(table(p$class,y))
 plot(model.lda$finalModel)
 ```
 
-## Comparación LDA con CV y LDA con boot
+## Comparación LDA con CV y LDA con boot resamples 5 
+ESTO NO FUNCIONA 
 
-```{r}
+```{r, message=FALSE, warning=FALSE,include=FALSE}
 # lda con CV
 pred_cv <- predict(model.lda$finalModel,x,type="class")
 print(table(pred_cv$class,y))
 # lda con boot
 
+train_control <- trainControl(method="boot", number=4) # en el paper era 100
+SEED <- 1234 # seed semilla para números aleatorios
+set.seed(SEED)
+model.lda.boot <- train(as.factor(Origen)~., data=data, 
+                  trControl=train_control, method="lda",metric=METRIC)
 pred_boot <- predict(model.lda.boot$finalModel,x,type="class")
 print(table(pred_boot$class,y))
+
+results <- resamples(list(LDA_CV=model.lda,LDA_boot=model.lda.boot))
+# summarize the distributions
+summary(results)
+# boxplots of results
+bwplot(results)
+# dot plots of results
+dotplot(results)
 ```
 
 
