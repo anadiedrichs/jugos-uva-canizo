@@ -97,7 +97,7 @@ Los modelos que entrenamos son: LDA (linear discriminant analysis) y redes neuro
 ```{r}
 library(caret)
 x = data[,-1] # quito columna Origen
-y = data$Origen
+y = as.factor(data$Origen)
 
 METRIC <- "Accuracy" #
 train_control <- trainControl(method="boot", number=100)
@@ -108,6 +108,10 @@ model.lda.boot <- train(as.factor(Origen)~., data=data,
 
 p <- predict(model.lda.boot$finalModel,x,type="class")
 
+```
+
+```{r}
+print(p)
 ```
 
 Imprimimos información sobre el modelo
@@ -122,7 +126,7 @@ Los resultados del experimento son:
 model.lda.boot$results
 ```
 
-Observamos que en promedio con LDA nos brindó un Accuracy de 0.74 y Kappa de 0.46. Un valor Kappa bajo no es indicador confiable para este modelo.
+Observamos que en promedio con LDA nos brindó un Accuracy de 0.76 y Kappa de 0.5. Un valor Kappa bajo no es indicador confiable para este modelo.
 
 
 ### Neural Network
@@ -204,10 +208,7 @@ mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
 METRIC <- "Accuracy" #
 train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
 
-set.seed(SEED)
-mySeeds <- sapply(simplify = FALSE, 1:11, function(u) sample(10^4, 3))
-train_control <- trainControl(method="cv", number=4,seeds = mySeeds,classProbs=TRUE)
-model.lda <- train(as.factor(Origen)~., data=data, 
+model.lda <- train(form=as.factor(Origen)~., data=data, 
                   trControl=train_control, method="lda",metric=METRIC)
 
 p <- predict(model.lda$finalModel,x,type="class")
@@ -215,8 +216,29 @@ p <- predict(model.lda$finalModel,x,type="class")
 ```
 
 ```{r}
+model.lda$finalModel
+```
+
+
+```{r}
 print(table(p$class,y))
 ```
+```{r}
+plot(model.lda$finalModel)
+```
+
+## Comparación LDA con CV y LDA con boot
+
+```{r}
+# lda con CV
+pred_cv <- predict(model.lda$finalModel,x,type="class")
+print(table(pred_cv$class,y))
+# lda con boot
+
+pred_boot <- predict(model.lda.boot$finalModel,x,type="class")
+print(table(pred_boot$class,y))
+```
+
 
 ## Neural network
 ```{r}
